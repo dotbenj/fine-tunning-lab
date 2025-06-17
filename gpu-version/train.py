@@ -58,15 +58,18 @@ dataset = load_dataset("json", data_files={
     "eval": "../data/eval-instruct-sftt.jsonl"
 })
 
-def tokenize(example):
-    output = tokenizer(
-        example["prompt"] + "\n<|assistant|>\n" + example["completion"],
+def tokenize(batch):
+    prompts = batch["prompt"]
+    completions = batch["completion"]
+    texts = [p + "\n<|assistant|>\n" + c for p, c in zip(prompts, completions)]
+    outputs = tokenizer(
+        texts,
         truncation=True,
         padding="max_length",
         max_length=max_length,
     )
-    output["labels"] = output["input_ids"].copy()
-    return output
+    outputs["labels"] = outputs["input_ids"].copy()
+    return outputs
 
 tokenized_dataset = dataset.map(tokenize, batched=True, remove_columns=["prompt", "completion"])
 
@@ -78,7 +81,7 @@ training_args = TrainingArguments(
     gradient_accumulation_steps=gradient_accumulation_steps,
     warmup_steps=10,
     logging_steps=10,
-    evaluation_strategy="epoch",
+    eval_strategy="epoch",
     save_strategy="epoch",
     save_total_limit=1,
     learning_rate=2e-4,
