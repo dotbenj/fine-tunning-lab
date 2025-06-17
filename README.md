@@ -24,6 +24,7 @@ Exemple de ligne dans le jeu de données :
   "description": "Développement de la stratégie d'acquisition online.",
   "label": "marketing"
 }
+```
 
 ## 🛠️ Instructions générales
 
