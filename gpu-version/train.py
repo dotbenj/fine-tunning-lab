@@ -106,10 +106,50 @@ trainer = Trainer(
 
 trainer.train()
 
-# ----------- CLASSIFICATION REPORT ----------
-print("🔎 Évaluation qualitative (sample):")
-eval_preds = trainer.predict(tokenized_dataset["eval"])
-decoded_preds = tokenizer.batch_decode(np.argmax(eval_preds.predictions, axis=-1), skip_special_tokens=True)
-decoded_labels = tokenizer.batch_decode(eval_preds.label_ids, skip_special_tokens=True)
-for pred, label in zip(decoded_preds[:5], decoded_labels[:5]):
-    print(f"\n💬 Pred: {pred}\n✅ Label: {label}")
+# 🧬 Save PEFT model (adapters) correctly
+print("💾 Saving QLoRA adapter to ./qlora-mistral/")
+model.save_pretrained("./qlora-mistral")
+tokenizer.save_pretrained("./qlora-mistral")
+
+# -------------------
+# 🧼 Free up memory before evaluation
+# -------------------
+import gc
+torch.cuda.empty_cache()
+gc.collect()
+
+# -------------------
+# ✅ Safe evaluation on small eval set
+# -------------------
+print("🔎 Running safe evaluation...")
+
+# Optional: reduce the number of eval examples to avoid OOM
+eval_subset = tokenized_dataset["eval"].select(range(10))
+
+# Just get metrics (no full decode to avoid logits storage)
+metrics = trainer.evaluate(eval_dataset=eval_subset)
+print("📊 Eval loss:", metrics["eval_loss"])
+
+# -------------------
+# 🧠 Sample decoding (manual generation)
+# -------------------
+print("\n🔎 Manual generation preview:")
+
+# Get a few raw prompts to generate on
+raw_eval_set = dataset["eval"].select(range(3))
+
+model.eval()
+for sample in raw_eval_set:
+    input_text = sample["prompt"] + "\n<|assistant|>\n"
+    input_ids = tokenizer(input_text, return_tensors="pt", truncation=True, max_length=1024).input_ids.to(model.device)
+    with torch.no_grad():
+        outputs = model.generate(
+            input_ids,
+            max_new_tokens=50,
+            temperature=0.7,
+            do_sample=False,
+            pad_token_id=tokenizer.eos_token_id
+        )
+    generated = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    print(f"\n💬 Prompt:\n{input_text}")
+    print(f"🤖 Output:\n{generated}")
