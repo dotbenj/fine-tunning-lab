@@ -44,8 +44,15 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-3 - Lancer l'entrainementt :
+3 - Lancer l'entrainement :
 
 ```bash
 python train.py
 ```
+
+4 - Lancer l'inference (seulement pour le CPU):
+
+```bash
+python predict.py "Classifie l'expérience professionnelle ci-dessous dans l'un des départements suivants : administration, creative, consulting, sales, customer_service, education, finance, engineering, legal, marketing, medical, operations, research, hr, tech_support, other. Pour chaque expérience, réponds strictement par le nom exact d'un seul département parmi cette liste, sans ajouter d'explication ou de texte supplémentaire. Exemples de réponses valides : administration, sales, tech_support. Expérience à classifier : job_title : job title à remplir description : description à remplir"
+```
+

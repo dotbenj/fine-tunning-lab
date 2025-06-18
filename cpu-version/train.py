@@ -16,9 +16,9 @@ from sklearn.metrics import f1_score, classification_report
 # ----------------------
 # model_name = "prajjwal1/bert-tiny" # Use this model for low CPU
 model_name = "distilbert-base-uncased"
-num_labels = 20  # nombre total de départements
+num_labels = 16  # nombre total de départements
 batch_size = 8
-epochs = 20
+epochs = 35
 max_length = 512
 eval_patience = 2
 
@@ -113,3 +113,20 @@ preds = np.argmax(predictions.predictions, axis=1)
 labels = predictions.label_ids
 print("\n🎯 Classification Report:\n")
 print(classification_report(labels, preds, target_names=unique_labels))
+
+# ----------------------
+# 💾 Sauvegarde pour Hugging Face
+# ----------------------
+model_dir = "./model-cpu-final"
+
+# Ajoute explicitement ces champs à la config
+model.config.id2label = id2label
+model.config.label2id = label2id
+model.config.num_labels = len(label2id)
+
+# 🔧 Sauvegarde manuelle de la config propre
+model.config.save_pretrained(model_dir)
+
+# 💾 Sauvegarde du modèle et du tokenizer
+model.save_pretrained(model_dir)
+tokenizer.save_pretrained(model_dir)
